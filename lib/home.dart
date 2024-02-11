@@ -4,7 +4,7 @@ import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_firebase_demo/email_auth/login_screen.dart';
+import 'package:flutter_firebase_demo/phone_auth/phone_login.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -19,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
     log("sogn out success");
     Navigator.popUntil(context, (route) => route.isFirst);
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => const LoginPage()));
+        context, MaterialPageRoute(builder: (context) => const PhoneLoginPage()));
   }
 
   @override
