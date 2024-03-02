@@ -1,11 +1,16 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_demo/phone_auth/phone_login.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,9 +20,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Some TextEditingCOntrolers to store respected data
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController ageController = TextEditingController();
+  File? profilePic;
 
   void logout() async {
     await FirebaseAuth.instance.signOut();
@@ -74,20 +81,43 @@ class _HomeScreenState extends State<HomeScreen> {
     String ageAtr = ageController.text.toString();
     int? age = int.tryParse(ageAtr);
 
-    if (name != "" || email != "") {
+    if (name != "" && email != "" && profilePic != null) {
+      UploadTask uploadTask = FirebaseStorage.instance
+          .ref()
+          .child("profilePictures")
+          .child(const Uuid().v1())
+          .putFile(profilePic!);
+
+      TaskSnapshot taskSnapshot = await uploadTask;
+      String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+
+      Map<String, dynamic> userData = {
+        "name": name,
+        "age": age,
+        "email": email,
+        "profileIamge": downloadUrl,
+        "sampleArray": [
+          name,
+          age,
+          email,
+        ],
+      };
       FirebaseFirestore instance = FirebaseFirestore.instance;
-      instance.collection("users").add(
-        {
-          "name": name,
-          "email": email,
-          "age": age,
-        },
-      );
+      instance.collection("users").add(userData
+          // {
+          // "name": name,
+          // "email": email,
+          // "age": age,
+          // },
+          );
       nameController.clear();
       emailController.clear();
       ageController.clear();
+      setState(() {
+        profilePic = null;
+      });
     } else {
-      log("data cannot be empty");
+      log("Data cannot be empty");
     }
   }
 
@@ -110,6 +140,29 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(15),
           child: Column(
             children: [
+              CupertinoButton(
+                onPressed: () async {
+                  XFile? selectedImage = await ImagePicker().pickImage(
+                    source: ImageSource.gallery,
+                  );
+                  if (selectedImage != null) {
+                    File convertedImage = File(selectedImage.path);
+                    setState(() {
+                      profilePic = convertedImage;
+                    });
+
+                    log("Image Selected");
+                  } else {
+                    log("Image not selected");
+                  }
+                },
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage:
+                      (profilePic != null) ? FileImage(profilePic!) : null,
+                  backgroundColor: Colors.grey,
+                ),
+              ),
               TextField(
                 decoration: const InputDecoration(
                   hintText: "Name",
@@ -146,10 +199,10 @@ class _HomeScreenState extends State<HomeScreen> {
               StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection("users")
-                      .orderBy(
-                        "age",
-                        descending: true,
-                      )
+                      // .orderBy(
+                      //   "age",
+                      //   descending: true,
+                      // )
                       .
                       //where(
                       // "age",
@@ -169,6 +222,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   snapshot.data!.docs[index].data()
                                       as Map<String, dynamic>;
                               return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundImage:NetworkImage( userMap["profileIamge"]),
+                                  backgroundColor: Colors.grey,
+                                ),
                                 title: Text(
                                   userMap["name"] + " (${userMap["age"]})",
                                 ),
