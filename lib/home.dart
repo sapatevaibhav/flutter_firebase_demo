@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
+  TextEditingController ageController = TextEditingController();
 
   void logout() async {
     await FirebaseAuth.instance.signOut();
@@ -70,12 +71,21 @@ class _HomeScreenState extends State<HomeScreen> {
   void saveUser() async {
     String name = nameController.text.toString();
     String email = emailController.text.toString();
+    String ageAtr = ageController.text.toString();
+    int? age = int.tryParse(ageAtr);
 
     if (name != "" || email != "") {
       FirebaseFirestore instance = FirebaseFirestore.instance;
-      instance.collection("users").add({"name": name, "email": email});
+      instance.collection("users").add(
+        {
+          "name": name,
+          "email": email,
+          "age": age,
+        },
+      );
       nameController.clear();
       emailController.clear();
+      ageController.clear();
     } else {
       log("data cannot be empty");
     }
@@ -106,11 +116,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 controller: nameController,
               ),
+              const SizedBox(
+                height: 10,
+              ),
               TextField(
                 decoration: const InputDecoration(
                   hintText: "Email",
                 ),
                 controller: emailController,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              TextField(
+                decoration: const InputDecoration(
+                  hintText: "Age",
+                ),
+                controller: ageController,
               ),
               const SizedBox(
                 height: 20,
@@ -119,12 +141,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   saveUser();
                 },
-                child: const Text("data"),
+                child: const Text("Save"),
               ),
               StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection("users")
-                      .snapshots(),
+                      .orderBy(
+                        "age",
+                        descending: true,
+                      )
+                      .
+                      //where(
+                      // "age",
+                      // whereNotIn: [
+                      //   22,
+                      // ],
+                      // )
+                      snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.active) {
                       if (snapshot.hasData && snapshot.data != null) {
@@ -136,7 +169,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   snapshot.data!.docs[index].data()
                                       as Map<String, dynamic>;
                               return ListTile(
-                                title: Text(userMap["name"]),
+                                title: Text(
+                                  userMap["name"] + " (${userMap["age"]})",
+                                ),
                                 subtitle: Text(userMap["email"]),
                                 trailing: IconButton(
                                   onPressed: () {
