@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
@@ -97,10 +98,21 @@ class _HomeScreenState extends State<HomeScreen> {
           .child(const Uuid().v1())
           .putFile(profilePic!);
 
+      // Displaying the progress of uploading image
+      StreamSubscription streamSubscription =
+          uploadTask.snapshotEvents.listen((snapshot) {
+        double percentage =
+            snapshot.bytesTransferred / snapshot.totalBytes * 100;
+        log(percentage.toString());
+      });
+
       // Await for uploading picture
       TaskSnapshot taskSnapshot = await uploadTask;
       // Grab the dowmnload URL from that snapshot to store it in FireStore
       String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+
+      // Cancel the streamSubscription to avoid memory leak
+      streamSubscription.cancel();
 
       Map<String, dynamic> userData = {
         // Map to store data in FireStore
