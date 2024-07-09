@@ -1,10 +1,7 @@
-import 'dart:developer';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_firebase_demo/email_auth/login_screen.dart';
 import 'package:flutter_firebase_demo/firebase_options.dart';
 import 'package:flutter_firebase_demo/home.dart';
 import 'package:flutter_firebase_demo/phone_auth/phone_login.dart';
