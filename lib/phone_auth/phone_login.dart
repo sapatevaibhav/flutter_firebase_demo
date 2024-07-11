@@ -1,14 +1,12 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_firebase_demo/home.dart';
-import '../profile_options/profile_page.dart';
+import 'package:flutter_firebase_demo/home_screen.dart';
+import 'package:flutter_firebase_demo/pages/profile_page.dart';
 
 class PhoneLoginPage extends StatefulWidget {
-  const PhoneLoginPage({super.key});
+  const PhoneLoginPage({Key? key}) : super(key: key);
 
   @override
   State<PhoneLoginPage> createState() => _PhoneLoginPageState();
@@ -71,14 +69,19 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
   }
 
   void checkProfile(String uid) async {
-    // Check if user profile exists in Firestore
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
     if (userDoc.exists) {
-      // Navigate to home screen if profile exists
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => HomeScreen(currentUserUid: uid)),
+      );
     } else {
-      // Navigate to profile page if profile does not exist
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage(uid: uid)));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage(uid: uid)),
+      );
     }
   }
 

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_demo/firebase_options.dart';
-import 'package:flutter_firebase_demo/home.dart';
+import 'package:flutter_firebase_demo/home_screen.dart';
 import 'package:flutter_firebase_demo/phone_auth/phone_login.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
 
@@ -35,9 +35,25 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: theme,
         darkTheme: darkTheme,
-        home: (FirebaseAuth.instance.currentUser != null)
-            ? const HomeScreen()
-            : const PhoneLoginPage(),
+        home: StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            } else {
+              if (snapshot.hasData && snapshot.data != null) {
+                String uid = snapshot.data!.uid;
+                return HomeScreen(currentUserUid: uid);
+              } else {
+                return const PhoneLoginPage();
+              }
+            }
+          },
+        ),
       ),
     );
   }

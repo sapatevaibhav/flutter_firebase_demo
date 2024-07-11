@@ -1,156 +1,186 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'dart:async';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_firebase_demo/home.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_firebase_demo/home_screen.dart';
+import 'package:flutter_firebase_demo/pages/profile_page.dart';
 
-class ProfilePage extends StatefulWidget {
-  final String uid;
-  const ProfilePage({Key? key, required this.uid}) : super(key: key);
+class PhoneLoginPage extends StatefulWidget {
+  const PhoneLoginPage({Key? key}) : super(key: key);
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<PhoneLoginPage> createState() => _PhoneLoginPageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  TextEditingController nameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController ageController = TextEditingController();
-  File? profilePic;
-  bool isNameValid = true;
+class _PhoneLoginPageState extends State<PhoneLoginPage> {
+  TextEditingController phoneController = TextEditingController();
+  TextEditingController otpController = TextEditingController();
+  bool isOTPSent = false;
+  bool isOTPValid = false;
+  String? verificationId;
 
-  void saveUser() async {
-    String name = nameController.text.trim();
-    String email = emailController.text.trim();
-    String ageStr = ageController.text.trim();
-    int? age = int.tryParse(ageStr);
-
-    if (name.isEmpty) {
-      setState(() {
-        isNameValid = false;
-      });
-      return;
+  void sendOTP() async {
+    String phone = "+91${phoneController.text.trim()}";
+    if (phone == "+91") {
+      log("Enter the details");
+    } else {
+      try {
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: phone,
+          codeSent: (verificationId, resendToken) {
+            setState(() {
+              isOTPSent = true;
+              this.verificationId = verificationId;
+            });
+          },
+          verificationCompleted: (credential) {},
+          verificationFailed: (ex) {
+            log(ex.code.toString());
+          },
+          codeAutoRetrievalTimeout: (verificationId) {},
+          timeout: const Duration(seconds: 30),
+        );
+      } on FirebaseAuthException catch (e) {
+        log(e.code.toString());
+      }
     }
+  }
 
-    String? downloadUrl;
-    if (profilePic != null) {
-      UploadTask uploadTask = FirebaseStorage.instance
-          .ref()
-          .child("profilePictures")
-          .child(const Uuid().v1())
-          .putFile(profilePic!);
-
-      StreamSubscription streamSubscription =
-          uploadTask.snapshotEvents.listen((snapshot) {
-        double percentage =
-            snapshot.bytesTransferred / snapshot.totalBytes * 100;
-        log(percentage.toString());
-      });
-
-      TaskSnapshot taskSnapshot = await uploadTask;
-      downloadUrl = await taskSnapshot.ref.getDownloadURL();
-      streamSubscription.cancel();
+  void verifyOTP() async {
+    String otp = otpController.text.trim();
+    if (otp.isEmpty || verificationId == null) {
+      log("Enter the OTP");
+    } else {
+      try {
+        PhoneAuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: verificationId!,
+          smsCode: otp,
+        );
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+        if (userCredential.user != null) {
+          log("sign in success");
+          checkProfile(userCredential.user!.uid);
+        }
+      } on FirebaseAuthException catch (e) {
+        log(e.code.toString());
+      }
     }
+  }
 
-    Map<String, dynamic> userData = {
-      "name": name,
-      "age": age,
-      "email": email,
-      "profileImage": downloadUrl,
-    };
-
-    FirebaseFirestore.instance.collection("users").doc(widget.uid).set(userData);
-
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+  void checkProfile(String uid) async {
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    if (userDoc.exists) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen(currentUserUid: uid)),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage(uid: uid)),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('प्रोफाइल माहिती'),
-      ),
+      backgroundColor: Colors.black,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              CupertinoButton(
-                onPressed: () async {
-                  XFile? selectedImage = await ImagePicker().pickImage(
-                    source: ImageSource.gallery,
-                  );
-                  if (selectedImage != null) {
-                    File convertedImage = File(selectedImage.path);
-                    setState(() {
-                      profilePic = convertedImage;
-                    });
-                    log("Image Selected");
-                  } else {
-                    log("Image not selected");
-                  }
-                },
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage:
-                      (profilePic != null) ? FileImage(profilePic!) : null,
-                  backgroundColor: Colors.grey,
-                ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.0),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: "नाव",
-                  border: const OutlineInputBorder(),
-                  errorText: isNameValid ? null : "नाव आवश्यक आहे",
-                ),
-                onChanged: (value) {
-                  if (value.trim().isEmpty) {
-                    setState(() {
-                      isNameValid = false;
-                    });
-                  } else {
-                    setState(() {
-                      isNameValid = true;
-                    });
-                  }
-                },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.person, size: 64, color: Colors.black),
+                        SizedBox(height: 8.0),
+                        Text(
+                          'आपले गाव',
+                          style: TextStyle(
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextField(
+                    controller: phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'फोन नंबर',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  ElevatedButton(
+                    onPressed: sendOTP,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                    ),
+                    child: const Text('OTP पाठवा'),
+                  ),
+                  const SizedBox(height: 16.0),
+                  if (isOTPSent)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: otpController,
+                          decoration: const InputDecoration(
+                            labelText: 'OTP',
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              isOTPValid = value.length == 6;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16.0),
+                        ElevatedButton(
+                          onPressed: isOTPValid ? verifyOTP : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isOTPValid ? Colors.black : Colors.grey,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                          ),
+                          child: const Text('लॉगिन करा'),
+                        ),
+                      ],
+                    ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: "ईमेल (पर्यायी)",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: ageController,
-                decoration: const InputDecoration(
-                  labelText: "वय (पर्यायी)",
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: saveUser,
-                child: const Text("जतन करा"),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+void main() {
+  runApp(const MaterialApp(
+    home: PhoneLoginPage(),
+  ));
 }
