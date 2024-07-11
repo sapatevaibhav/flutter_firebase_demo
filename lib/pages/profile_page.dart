@@ -15,7 +15,7 @@ class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key, required this.uid}) : super(key: key);
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
@@ -24,8 +24,12 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController ageController = TextEditingController();
   File? profilePic;
   bool isNameValid = true;
+  String? profileImageUrl;
 
-  // Fetch user data from Firestore
+  // Added a placeholder image asset
+  final AssetImage placeholderImage =
+      const AssetImage('assets/images/profile.jpg');
+
   Future<void> fetchUserData() async {
     try {
       DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
@@ -34,10 +38,14 @@ class _ProfilePageState extends State<ProfilePage> {
           .get();
 
       if (docSnapshot.exists) {
-        Map<String, dynamic> userData = docSnapshot.data() as Map<String, dynamic>;
-        nameController.text = userData['name'] ?? '';
-        emailController.text = userData['email'] ?? '';
-        ageController.text = userData['age']?.toString() ?? '';
+        Map<String, dynamic> userData =
+            docSnapshot.data() as Map<String, dynamic>;
+        setState(() {
+          nameController.text = userData['name'] ?? '';
+          emailController.text = userData['email'] ?? '';
+          ageController.text = userData['age']?.toString() ?? '';
+          profileImageUrl = userData['profileImage'];
+        });
       }
     } catch (error) {
       log("Error fetching user data: $error");
@@ -47,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    fetchUserData(); // Fetch user data when the page initializes
+    fetchUserData();
   }
 
   void saveUser() async {
@@ -87,7 +95,7 @@ class _ProfilePageState extends State<ProfilePage> {
       "name": name,
       "age": age,
       "email": email,
-      "profileImage": downloadUrl,
+      "profileImage": downloadUrl ?? profileImageUrl,
     };
 
     try {
@@ -96,14 +104,14 @@ class _ProfilePageState extends State<ProfilePage> {
           .doc(widget.uid)
           .set(userData);
 
-      // Navigate to HomeScreen after successfully saving user data
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen(currentUserUid: widget.uid)),
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(currentUserUid: widget.uid),
+        ),
       );
     } catch (error) {
       log("Error saving user: $error");
-      // Handle error if needed
     }
   }
 
@@ -135,9 +143,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 },
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundImage:
-                      (profilePic != null) ? FileImage(profilePic!) : null,
-                  backgroundColor: Colors.grey,
+                  backgroundImage: profilePic != null
+                      ? FileImage(profilePic!) as ImageProvider<Object>
+                      : profileImageUrl != null
+                          ? NetworkImage(profileImageUrl!)
+                          : placeholderImage as ImageProvider<Object>,
                 ),
               ),
               const SizedBox(height: 16),
