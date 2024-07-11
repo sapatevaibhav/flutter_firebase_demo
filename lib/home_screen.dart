@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_firebase_demo/post/post_tile.dart';
+import 'package:flutter_firebase_demo/pages/home_page.dart';
+import 'package:flutter_firebase_demo/pages/messages_page.dart';
+import 'package:flutter_firebase_demo/pages/notifications_page.dart';
+import 'package:flutter_firebase_demo/pages/profile_page.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final String currentUserUid; // Assuming you have the current user's uid
+
+  const HomeScreen({Key? key, required this.currentUserUid}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -12,10 +16,26 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isDarkTheme = false;
+  int _selectedIndex = 0;
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    _pageController.jumpToPage(index);
   }
 
   @override
@@ -48,56 +68,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'काय चालू आहे?',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance.collection("posts").snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.active) {
-                  if (snapshot.hasData && snapshot.data != null) {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.docs.length,
-                      itemBuilder: (context, index) {
-                        Map<String, dynamic> postMap =
-                            snapshot.data!.docs[index].data()
-                                as Map<String, dynamic>;
-                        return PostTile(postMap: postMap);
-                      },
-                    );
-                  } else {
-                    return const Center(
-                      child: Text(
-                        "No posts available",
-                        // style: TextStyle(color: Colors.black),
-                      ),
-                    );
-                  }
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
-          ),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        children: <Widget>[
+          HomePage(),
+          NotificationsPage(),
+          MessagesPage(),
+          ProfilePage(uid: widget.currentUserUid), // Pass the uid here
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'गाव',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),
@@ -112,12 +101,14 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'मी',
           ),
         ],
+        currentIndex: _selectedIndex,
         selectedItemColor: _isDarkTheme ? Colors.black : Colors.white,
         unselectedItemColor: _isDarkTheme ? Colors.black54 : Colors.white54,
         showUnselectedLabels: true,
         selectedFontSize: 20,
         unselectedFontSize: 18,
         type: BottomNavigationBarType.fixed,
+        onTap: _onItemTapped,
       ),
     );
   }
