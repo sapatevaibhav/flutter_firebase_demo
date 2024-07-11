@@ -1,10 +1,10 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_demo/firebase_options.dart';
 import 'package:flutter_firebase_demo/home.dart';
 import 'package:flutter_firebase_demo/phone_auth/phone_login.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,28 +12,33 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // QuerySnapshot snapshot =
-  //     await FirebaseFirestore.instance.collection("users").get();
-  // log(snapshot.docs.toString());
-
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return AdaptiveTheme(
+      light: ThemeData(
+        primarySwatch: Colors.blue,
+        brightness: Brightness.light,
       ),
-      home: (FirebaseAuth.instance.currentUser != null)
-          ? const HomeScreen()
-          : const PhoneLoginPage(),
+      dark: ThemeData(
+        primarySwatch: Colors.blue,
+        brightness: Brightness.dark,
+      ),
+      initial: AdaptiveThemeMode.light,
+      builder: (theme, darkTheme) => MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: theme,
+        darkTheme: darkTheme,
+        home: (FirebaseAuth.instance.currentUser != null)
+            ? const HomeScreen()
+            : const PhoneLoginPage(),
+      ),
     );
   }
 }

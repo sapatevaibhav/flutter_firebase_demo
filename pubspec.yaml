@@ -41,6 +41,7 @@ dependencies:
   firebase_storage: ^11.6.7
   image_picker: ^1.0.7
   uuid: ^4.3.3
+  adaptive_theme: ^3.6.0
 
 dev_dependencies:
   flutter_test:

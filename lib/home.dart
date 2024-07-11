@@ -1,11 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'dart:developer';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_firebase_demo/phone_auth/phone_login.dart';
-import 'dart:io';
+import 'package:flutter_firebase_demo/post/post_tile.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,26 +11,39 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  File? profilePic;
+  bool _isDarkTheme = false;
 
-  void logout() async {
-    await FirebaseAuth.instance.signOut();
-    log("sign out success");
-    Navigator.popUntil(context, (route) => route.isFirst);
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => const PhoneLoginPage()));
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('आपले गाव'),
+        title: const Text(
+          'आपले गाव',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 30,
+          ),
+        ),
         actions: [
-          Switch(
-            value: false,
-            onChanged: (bool value) {
-              // Add theme switching logic here if required
+          IconButton(
+            icon: Icon(
+              _isDarkTheme ? Icons.dark_mode : Icons.light_mode,
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkTheme = !_isDarkTheme;
+              });
+              final themeMode = Theme.of(context).brightness == Brightness.dark
+                  ? AdaptiveThemeMode.light
+                  : AdaptiveThemeMode.dark;
+              AdaptiveTheme.of(context).setThemeMode(
+                themeMode,
+              );
             },
           ),
         ],
@@ -54,7 +63,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection("posts").snapshots(),
+              stream:
+                  FirebaseFirestore.instance.collection("posts").snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.active) {
                   if (snapshot.hasData && snapshot.data != null) {
@@ -62,12 +72,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
                         Map<String, dynamic> postMap =
-                            snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                            snapshot.data!.docs[index].data()
+                                as Map<String, dynamic>;
                         return PostTile(postMap: postMap);
                       },
                     );
                   } else {
-                    return const Center(child: Text("No posts available"));
+                    return const Center(
+                      child: Text(
+                        "No posts available",
+                        // style: TextStyle(color: Colors.black),
+                      ),
+                    );
                   }
                 } else {
                   return const Center(child: CircularProgressIndicator());
@@ -81,69 +97,27 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: '',
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),
-            label: '',
+            label: 'सूचना',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.mail),
-            label: '',
+            label: 'संदेश',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: '',
+            label: 'मी',
           ),
         ],
-        selectedItemColor: Colors.amber[800],
-      ),
-    );
-  }
-}
-
-class PostTile extends StatelessWidget {
-  final Map<String, dynamic> postMap;
-
-  const PostTile({Key? key, required this.postMap}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: NetworkImage(postMap["profileImage"]),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(postMap["name"], style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(postMap["time"], style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(postMap["content"]),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(onPressed: () {}, child: const Text("अपवोट करा", style: TextStyle(color: Colors.green))),
-                TextButton(onPressed: () {}, child: const Text("विरुद्ध मत द्या", style: TextStyle(color: Colors.red))),
-              ],
-            ),
-          ],
-        ),
+        selectedItemColor: _isDarkTheme ? Colors.black : Colors.white,
+        unselectedItemColor: _isDarkTheme ? Colors.black54 : Colors.white54,
+        showUnselectedLabels: true,
+        selectedFontSize: 20,
+        unselectedFontSize: 18,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }
