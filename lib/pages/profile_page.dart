@@ -73,7 +73,6 @@ class ProfilePageState extends State<ProfilePage> {
     String? downloadUrl;
 
     try {
-      // Delete old profile picture if exists
       if (profileImageUrl != null) {
         await FirebaseStorage.instance.refFromURL(profileImageUrl!).delete();
         log("sucess deletion");
@@ -82,7 +81,6 @@ class ProfilePageState extends State<ProfilePage> {
       log("Error deleting old profile picture: $error");
     }
 
-    // Upload new profile picture if selected
     if (profilePic != null) {
       UploadTask uploadTask = FirebaseStorage.instance
           .ref()

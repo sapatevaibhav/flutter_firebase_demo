@@ -76,10 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         children: <Widget>[
-          HomePage(),
-          NotificationsPage(),
-          MessagesPage(),
-          ProfilePage(uid: widget.currentUserUid), // Pass the uid here
+          const HomePage(),
+          const NotificationsPage(),
+          const MessagesPage(),
+          ProfilePage(uid: widget.currentUserUid),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -102,10 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: _isDarkTheme ? Colors.black : Colors.white,
-        unselectedItemColor: _isDarkTheme ? Colors.black54 : Colors.white54,
         showUnselectedLabels: true,
         selectedFontSize: 20,
+        selectedItemColor: const Color.fromARGB(255, 173, 76, 190),
+        selectedIconTheme: const IconThemeData(size: 35),
         unselectedFontSize: 18,
         type: BottomNavigationBarType.fixed,
         onTap: _onItemTapped,
