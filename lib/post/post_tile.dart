@@ -77,10 +77,10 @@ class PostTileState extends State<PostTile> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       color: widget.postMap['shreni'] == 'उच्च'
-          ? const Color.fromARGB(167, 128, 128, 128)
+          ? const Color.fromARGB(167, 201, 132, 132)
           : isDarkTheme
-              ? Colors.white
-              : Colors.black,
+              ?const Color.fromARGB(255, 98, 98, 98)
+              :  Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0), 
       ),
@@ -107,12 +107,12 @@ class PostTileState extends State<PostTile> {
                       userName,
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isDarkTheme ? Colors.black : Colors.white),
+                          color: isDarkTheme ? Colors.white  :Colors.black),
                     ),
                     Text(
                       timeAgo,
                       style: TextStyle(
-                          color: isDarkTheme ? Colors.black : Colors.white,
+                          color: isDarkTheme ? Colors.white  :Colors.black,
                           fontSize: 12),
                     ),
                   ],
@@ -123,7 +123,7 @@ class PostTileState extends State<PostTile> {
             Text(
               content,
               style:
-                  TextStyle(color: isDarkTheme ? Colors.black : Colors.white),
+                  TextStyle(color: isDarkTheme ? Colors.white:Colors.black  ),
             ),
             if (mediaUrl != null && mediaUrl.isNotEmpty) ...[
               const SizedBox(height: 8),

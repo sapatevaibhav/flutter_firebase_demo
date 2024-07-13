@@ -17,16 +17,16 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               readOnly: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'काय चालू आहे?',
-                border: OutlineInputBorder(),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
               ),
               onTap: () {
                 Navigator.push(
@@ -37,6 +37,9 @@ class HomePage extends StatelessWidget {
                 );
               },
             ),
+          ),
+          const SizedBox(
+            height: 20,
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -49,7 +52,8 @@ class HomePage extends StatelessWidget {
                 return ListView.builder(
                   itemCount: posts.length,
                   itemBuilder: (context, index) {
-                    return PostTile(postMap: posts[index].data() as Map<String, dynamic>);
+                    return PostTile(
+                        postMap: posts[index].data() as Map<String, dynamic>);
                   },
                 );
               },
