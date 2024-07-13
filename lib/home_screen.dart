@@ -6,7 +6,7 @@ import 'package:flutter_firebase_demo/pages/profile_page.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String currentUserUid; // Assuming you have the current user's uid
+  final String currentUserUid;
 
   const HomeScreen({Key? key, required this.currentUserUid}) : super(key: key);
 
@@ -76,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         children: <Widget>[
-          const HomePage(),
+          HomePage(uid: widget.currentUserUid),
           const NotificationsPage(),
           const MessagesPage(),
           ProfilePage(uid: widget.currentUserUid),
