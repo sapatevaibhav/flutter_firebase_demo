@@ -136,7 +136,10 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                         borderRadius: BorderRadius.circular(30.0),
                       ),
                     ),
-                    child: const Text('OTP पाठवा'),
+                    child: const Text(
+                      'OTP पाठवा',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
                   ),
                   const SizedBox(height: 16.0),
                   if (isOTPSent)
@@ -165,7 +168,12 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                               borderRadius: BorderRadius.circular(30.0),
                             ),
                           ),
-                          child: const Text('लॉगिन करा'),
+                          child:  Text(
+                            'लॉगिन करा',
+                            style: TextStyle(
+                                color: isOTPValid ? Colors.white : Colors.black,
+                                fontSize: 18),
+                          ),
                         ),
                       ],
                     ),

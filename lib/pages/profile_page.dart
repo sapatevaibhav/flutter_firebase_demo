@@ -3,10 +3,12 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_demo/home_screen.dart';
+import 'package:flutter_firebase_demo/phone_auth/phone_login.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
@@ -49,6 +51,15 @@ class ProfilePageState extends State<ProfilePage> {
     } catch (error) {
       log("Error fetching user data: $error");
     }
+  }
+
+  void logout() async {
+    // LogOut function logs out the user from the app
+    await FirebaseAuth.instance.signOut();
+    log("sign out success");
+    // After logging out return to the login screen
+    Navigator.pushReplacement(context,
+        MaterialPageRoute(builder: (context) => const PhoneLoginPage()));
   }
 
   @override
@@ -214,13 +225,13 @@ class ProfilePageState extends State<ProfilePage> {
                 decoration: BoxDecoration(
                   border: Border.all(
                       width: 1,
-                      color: const Color.fromARGB(255, 175, 175, 175)),
+                      color: const Color.fromARGB(217, 206, 116, 186)),
                   borderRadius: BorderRadius.circular(27),
                 ),
                 child: ElevatedButton(
                   onPressed: saveUser,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(126, 209, 209, 209),
+                    backgroundColor: const Color.fromARGB(125, 170, 103, 163),
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                   ),
@@ -229,7 +240,32 @@ class ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 173, 76, 190),
+                      color: Color.fromARGB(255, 217, 0, 255),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      width: 1,
+                      color:  Colors.red),
+                  borderRadius: BorderRadius.circular(27),
+                ),
+                child: ElevatedButton(
+                  onPressed: logout,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(107, 185, 101, 101),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
+                  ),
+                  child: const Text(
+                    "logout",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),

@@ -7,7 +7,7 @@ class NotificationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Text(
-        'सूचना Page',
+        'सूचना',
         style: TextStyle(fontSize: 24),
       ),
     );

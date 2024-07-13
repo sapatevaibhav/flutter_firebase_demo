@@ -7,7 +7,7 @@ class MessagesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Text(
-        'संदेश Page',
+        'संदेश',
         style: TextStyle(fontSize: 24),
       ),
     );
