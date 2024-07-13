@@ -15,10 +15,10 @@ class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key, required this.uid}) : super(key: key);
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class ProfilePageState extends State<ProfilePage> {
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController ageController = TextEditingController();
@@ -26,7 +26,6 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isNameValid = true;
   String? profileImageUrl;
 
-  // Added a placeholder image asset
   final AssetImage placeholderImage =
       const AssetImage('assets/images/profile.jpg');
 
@@ -72,6 +71,18 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     String? downloadUrl;
+
+    try {
+      // Delete old profile picture if exists
+      if (profileImageUrl != null) {
+        await FirebaseStorage.instance.refFromURL(profileImageUrl!).delete();
+        log("sucess deletion");
+      }
+    } catch (error) {
+      log("Error deleting old profile picture: $error");
+    }
+
+    // Upload new profile picture if selected
     if (profilePic != null) {
       UploadTask uploadTask = FirebaseStorage.instance
           .ref()
@@ -118,14 +129,18 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('प्रोफाइल माहिती'),
-      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              const Text(
+                'माझी माहिती',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               CupertinoButton(
                 onPressed: () async {
                   XFile? selectedImage = await ImagePicker().pickImage(
@@ -141,13 +156,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     log("Image not selected");
                   }
                 },
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: profilePic != null
-                      ? FileImage(profilePic!) as ImageProvider<Object>
-                      : profileImageUrl != null
-                          ? NetworkImage(profileImageUrl!)
-                          : placeholderImage as ImageProvider<Object>,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color.fromARGB(133, 97, 97, 97),
+                      width: 3,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: profilePic != null
+                        ? FileImage(profilePic!) as ImageProvider<Object>
+                        : profileImageUrl != null
+                            ? NetworkImage(profileImageUrl!)
+                            : placeholderImage as ImageProvider<Object>,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -188,9 +212,29 @@ class _ProfilePageState extends State<ProfilePage> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: saveUser,
-                child: const Text("जतन करा"),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      width: 1,
+                      color: const Color.fromARGB(255, 175, 175, 175)),
+                  borderRadius: BorderRadius.circular(27),
+                ),
+                child: ElevatedButton(
+                  onPressed: saveUser,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(126, 209, 209, 209),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
+                  ),
+                  child: const Text(
+                    "जतन करा",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 173, 76, 190),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
